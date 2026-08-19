@@ -1,5 +1,11 @@
 # prior-art
 
+**Published site: <https://com-junkawasaki.github.io/prior-art/>** — one indexable page per
+record, with Dublin Core and Google Scholar `citation_*` metadata, a bilingual index, and a
+sitemap. The site exists because a GitHub blob view of a `.md` file is close to invisible to
+the indexes that matter: Scholar indexes on `citation_*`, and Scholar is what feeds Google
+Patents' non-patent-literature corpus — the corpus a patent examiner actually searches.
+
 **Defensive publications.** Each directory is one dated disclosure, published so that
 the subject matter is prior art available to the public from the stated date. No patent
 protection is sought for any subject matter disclosed here.
