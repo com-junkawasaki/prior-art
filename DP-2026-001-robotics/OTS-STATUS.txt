@@ -1,0 +1,16 @@
+OpenTimestamps status
+=====================
+
+Recorded 2026-08-19T10:00:07Z. Re-check any time with:
+    ots verify <file>.ots      # the data file must sit alongside the .ots
+    ots upgrade <file>.ots     # completes a still-pending attestation
+
+evidence-manifest.txt              Success! Bitcoin block 963148 attests existence as of 2026-08-19 JST
+DISCLOSURE-001-robotics.md         Success! Bitcoin block 963148 attests existence as of 2026-08-19 JST
+SHA256SUMS                         Success! Bitcoin block 963148 attests existence as of 2026-08-19 JST
+tdcommons/SHA256SUMS-tdcommons     Success! Bitcoin block 963148 attests existence as of 2026-08-19 JST
+
+A pending attestation is not a failed one: the calendar has accepted the digest
+and the Bitcoin anchor follows once a block includes it. Only a Success line is
+evidence of the anchor -- do not read 'pending' as 'anchored', and do not read
+the mere existence of a .ots file as either.
