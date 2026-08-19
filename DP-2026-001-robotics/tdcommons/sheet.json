@@ -1,0 +1,72 @@
+[
+ {
+  "n": 1,
+  "file": "tdcommons/DP-2026-001-01-governor-gated-actuation.md",
+  "title": "Actuation gated by an independent governor, with the proposal and the permission held by separate parties",
+  "abstract": "A robot controlled or advised by a learned model (a neural policy, a large language model, a planner) can emit an actuation command that is physically unsafe. Filtering the model's output inside the model, or inside the same program that generates it, does not bound the failure: the component that decides what to do is the component that decides whether it is allowed. Two separate software components with separate authority:",
+  "keywords": "robot safety; governor; action admission; safety classification; audit ledger; telemetry proof; human sign-off; mission bounding; autonomous systems; AI safety"
+ },
+ {
+  "n": 2,
+  "file": "tdcommons/DP-2026-001-02-capability-typed-actuation.md",
+  "title": "Actuation as a typed capability, such that an ungranted actuation cannot be expressed",
+  "abstract": "Section 1 places a check between the actor and the hardware. That check can be bypassed if the actor's language gives it *ambient authority* \u2014 the ability to reach a device, socket, file, or driver directly, without asking. Every practical safety mechanism built on filtering an output stream can be defeated by a component that writes to the device by another route. The actor's program is written in a language, or a restricted subset of a language, in which the ability to cause an externally observable effect is a value that must be received, not an operation that is always available.",
+  "keywords": "capability security; object capability; effect system; deny by default; sandboxing; WebAssembly; ambient authority; robot actuation; least privilege; fail closed"
+ },
+ {
+  "n": 3,
+  "file": "tdcommons/DP-2026-001-03-pre-dispatch-verified-choreography.md",
+  "title": "Multi-agent choreography verified in full before any vehicle is dispatched",
+  "abstract": "A coordinated multi-vehicle motion \u2014 a drone light show, a warehouse fleet, a formation of agricultural machines \u2014 is conventionally made safe by reactive collision avoidance during flight. Reactive avoidance cannot give an advance guarantee, and it fails exactly when the agents are densest. The entire choreography is precomputed as data and verified as a whole before dispatch, so that dispatch is conditional on a completed proof rather than on runtime reaction.",
+  "keywords": "drone light show; swarm choreography; pre-flight verification; separation constraint; geofence; multi-agent motion planning; UAV safety; formation flight"
+ },
+ {
+  "n": 4,
+  "file": "tdcommons/DP-2026-001-04-deadman-chord-estop.md",
+  "title": "Deadman and chord-based emergency stop derived from a general-purpose input device",
+  "abstract": "Teleoperation from a consumer input device is convenient and unsafe: the device has no certified deadman, and a dropped or jammed controller continues to command motion. The mapping from device state to actuation command is a pure function of the decoded device state, and it enforces two independent conditions:",
+  "keywords": "teleoperation; deadman switch; emergency stop; gamepad; chord input; heartbeat timeout; fail safe; human-robot interface"
+ },
+ {
+  "n": 5,
+  "file": "tdcommons/DP-2026-001-05-actuator-bom-torque-gate.md",
+  "title": "Actuator bill-of-materials derived from the kinematic description, with continuous-torque validation as a design gate",
+  "abstract": "A robot's mechanical description (links, joints, limits, inertias) and its actuator selection are conventionally maintained in different tools by different people. A design therefore passes review with an actuator that cannot in fact hold the joint under continuous load. The kinematic description is authored as structured data in which each joint may carry an actuator specification as a field of the joint itself. From this single description two artifacts are derived mechanically:",
+  "keywords": "URDF; actuator sizing; bill of materials; continuous torque; robot design automation; inertia validation; joint limits; design gate"
+ },
+ {
+  "n": 6,
+  "file": "tdcommons/DP-2026-001-06-single-dynamics-kernel.md",
+  "title": "One deterministic, dependency-free dynamics kernel serving simulation, training, and control",
+  "abstract": "Robotics practice maintains at least three implementations of the same physics: one inside the simulator, one inside the training environment, and one inside the controller's model. They disagree, and the disagreement is discovered on the real robot. The simulators are additionally platform-bound: they cannot run in a browser, in a serverless worker, or inside a verifier. A single pure, deterministic, zero-dependency articulated-body dynamics kernel, written in a portable source language and compiled to every target that needs it (server runtime, browser via WebAssembly, native ahead-of-time binary, and a reference interpreter used as an oracle), such that the same code answers all three roles.",
+  "keywords": "articulated body dynamics; spatial vector algebra; recursive Newton-Euler; composite rigid body; GJK; EPA; inverse kinematics; damped least squares; LQR; trajectory generation; deterministic simulation; sim-to-real"
+ },
+ {
+  "n": 7,
+  "file": "tdcommons/DP-2026-001-07-domain-randomization-as-data.md",
+  "title": "Domain randomization expressed as data, with reproducibility by construction",
+  "abstract": "A policy trained in simulation transfers poorly unless the simulation is randomized. Randomization implemented as code inside the environment is neither auditable nor reproducible: the distribution that was actually sampled is not recoverable from the artifact, and a run cannot be replayed exactly. The randomization is a declarative document, not code. It states, per physical parameter, a range or distribution; per environment instance in a vectorized batch, a sampled configuration is drawn; the draw uses an explicitly seeded, specified generator so that the batch is a pure function of the seed and the document.",
+  "keywords": "domain randomization; reinforcement learning; sim-to-real transfer; reproducibility; seeded generator; vectorized environment; declarative configuration"
+ },
+ {
+  "n": 8,
+  "file": "tdcommons/DP-2026-001-08-unified-occupancy-fusion.md",
+  "title": "One occupancy representation fused from heterogeneous range sources through a single ingest interface",
+  "abstract": "A mobile robot typically maintains one obstacle representation per sensor modality, fused late and inconsistently, so that the planner's notion of free space differs from any single sensor's. A single occupancy grid in a stated frame, with one ingest operation per source modality but a single common representation: a rotating-lidar ring sweep and a depth image from a camera with stated intrinsics and extrinsics both reduce to marked world points in the same grid. The grid then supports, uniformly and independently of which sensor produced the evidence:",
+  "keywords": "occupancy grid; sensor fusion; lidar; depth camera; A-star path planning; pure pursuit; inflation; stuck detection; mobile robot navigation"
+ },
+ {
+  "n": 9,
+  "file": "tdcommons/DP-2026-001-09-vehicle-parameterized-gnc.md",
+  "title": "One guidance-navigation-control step function parameterized by vehicle physics across media",
+  "abstract": "Ground, marine, and aerial autonomy are built as separate stacks. The guidance and decision logic is duplicated three times and diverges, although the difference between the vehicles is confined to the physics of how a command becomes motion. A single guidance, navigation and control step function \u2014 goal handling, path planning, path tracking, clearance checking, stuck detection, arrival detection, and telemetry \u2014 parameterized by a vehicle model value supplying only the medium-specific relations:",
+  "keywords": "guidance navigation control; multi-domain autonomy; bicycle model; fixed wing; multirotor; marine vehicle; heterogeneous fleet; vehicle model as data"
+ },
+ {
+  "n": 10,
+  "file": "tdcommons/DP-2026-001-10-content-addressed-execution.md",
+  "title": "Content-addressed identity for a robot execution, so that what ran is recoverable by digest",
+  "abstract": "After an incident, the question \"what exactly was running\" is usually unanswerable. Code version, configuration, policy, model weights, inputs, and the effects performed are recorded in different systems with different retention, and the combination is not identified by anything. An execution is identified by the cryptographic digest of a structured value that names all of its determinants together:",
+  "keywords": "content addressing; execution identity; provenance; audit; reproducibility; effect log; receipt; causal DAG; incident reconstruction; Merkle"
+ }
+]

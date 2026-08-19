@@ -8,6 +8,13 @@ protection is sought for any subject matter disclosed here.
 |---|---|---|---|
 | [DP-2026-001](DP-2026-001-robotics/) | Governed robotics — capability-gated actuation, verified multi-agent choreography, deterministic portable dynamics | 2026-08-19 | 31 |
 
+DP-2026-001 is additionally split into **ten individually-indexable records** under
+[`DP-2026-001-robotics/tdcommons/`](DP-2026-001-robotics/tdcommons/), each self-contained,
+each with an English body and a Chinese abstract, as PDF and Markdown. See
+[`SUBMISSION-SHEET.md`](DP-2026-001-robotics/tdcommons/SUBMISSION-SHEET.md).
+The split exists because a prior-art search hits a record's **title and abstract** — ten
+focused records are found where one omnibus document is not.
+
 ## What each disclosure contains
 
 - `DISCLOSURE-*.md` — the disclosure itself: problem, mechanism, and a deliberately broad
@@ -40,6 +47,24 @@ this bundle without replacing anything in it.
 is structurally sound and its signature checks) and `:trusted` (someone vouched for the signing
 certificate) are separate fields, and with no trust predicate supplied the answer is
 `:unknown`, never `true`.
+
+## 中文说明
+
+本仓库收录**防御性公开**（defensive publication）文件。公开的唯一目的是使其中的技术方案
+自公开之日起成为**现有技术**（中国专利法第二十二条所称"为公众所知的技术"），从而阻止他人
+就相同或显而易见变形的技术方案取得在后专利。**作者声明不为其中任何技术方案申请专利。**
+
+每份公开文件均按"课题 — 机构 — **变型与推广**"三段撰写，其中变型系有意穷举列举，以使针对
+上述机制之显而易见变化的在后申请面对的是明确的**书面公开**，而非仅仅是"显而易见"的主张。
+
+证据部分包含：以提交哈希（commit / tree SHA-1）固定的全部参考实现仓库清单、
+[RFC 3161](https://www.rfc-editor.org/rfc/rfc3161.html) 时间戳令牌、以及锚定于比特币区块链的
+[OpenTimestamps](https://opentimestamps.org/) 存证。**请注意：本仓库所附 RFC 3161 令牌来自
+FreeTSA，并非任何法域的认定时间戳服务机构** —— 其可被独立验证，但不等同于中国联合信任时间戳
+服务中心、日本总务大臣认定时间戳或 eIDAS 合格时间戳。如需具备上述效力的时间戳，可就本仓库
+已固定的同一摘要另行申请，届时为增强而非替换。
+
+`DP-2026-001-robotics/VERIFY.md` 载明任何人自行验证上述全部内容的方法。
 
 ## Licence
 
