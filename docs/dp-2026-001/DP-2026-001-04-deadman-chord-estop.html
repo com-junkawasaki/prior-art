@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deadman and chord-based emergency stop derived from a general-purpose input device</title>
+<meta name="description" content="Teleoperation from a consumer input device is convenient and unsafe: the device has no certified deadman, and a dropped or jammed controller continues to command motion. The mapping from device state to actuation command is a pure function of the decoded device state, and it enforces two independent">
+<meta name="author" content="Jun Kawasaki">
+<link rel="canonical" href="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-04-deadman-chord-estop.html">
+<link rel="stylesheet" href="../style.css">
+<meta name="keywords" content="teleoperation; deadman switch; emergency stop; gamepad; chord input; heartbeat timeout; fail safe; human-robot interface">
+<meta name="DC.title" content="Deadman and chord-based emergency stop derived from a general-purpose input device">
+<meta name="DC.creator" content="Jun Kawasaki">
+<meta name="DC.date" content="2026-08-19">
+<meta name="DC.type" content="Text">
+<meta name="DC.rights" content="CC0 1.0 Universal">
+<meta name="citation_title" content="Deadman and chord-based emergency stop derived from a general-purpose input device">
+<meta name="citation_author" content="Kawasaki, Jun">
+<meta name="citation_publication_date" content="2026/08/19">
+<meta name="citation_technical_report_institution" content="Defensive publication DP-2026-001">
+<meta name="citation_abstract_html_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-04-deadman-chord-estop.html">
+<meta name="citation_pdf_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/pdf/DP-2026-001-04-deadman-chord-estop.pdf">
+</head>
+<body>
+<div class="wrap">
+<nav class="rec"><p><a href="../">← DP-2026-001 index</a> · <a href="pdf/DP-2026-001-04-deadman-chord-estop.pdf">PDF</a> · record 4 of 10</p></nav>
+<hr>
+<h1
+id="deadman-and-chord-based-emergency-stop-derived-from-a-general-purpose-input-device">Deadman
+and chord-based emergency stop derived from a general-purpose input
+device</h1>
+<blockquote>
+<p><strong>Defensive publication.</strong> This document is published
+solely to place its subject matter into the public domain of technical
+knowledge as prior art. <strong>No patent protection is sought by the
+author for any subject matter described here.</strong></p>
+<p><strong>Author / declarant:</strong> Jun Kawasaki
+(<code>root@junkawasaki.com</code>) <strong>Disclosure set:</strong>
+DP-2026-001, part 4 of 10 · first published 2026-08-19 (UTC)
+<strong>Enabling reference implementation:</strong> public source code
+under <code>https://github.com/kotoba-lang/</code>, licensed Apache-2.0,
+fixed by commit and tree SHA-1 in the evidence bundle at
+<code>https://github.com/com-junkawasaki/prior-art</code> — that bundle
+carries RFC 3161 time-stamp tokens and OpenTimestamps attestations over
+the fixing manifest.</p>
+</blockquote>
+<h2 id="note-on-the-variants-and-generalizations-section-below">Note on
+the "Variants and generalizations" section below</h2>
+<p>The variants are stated deliberately and at length. They are
+disclosed so that a later filing directed to an obvious variation of the
+mechanism is met by an express <strong>written</strong> disclosure of
+that variation, and not merely by an argument that the variation would
+have been obvious. Where the text says "any", the word is intended in
+its ordinary broad sense and the enumeration following it is
+illustrative, not exhaustive.</p>
+<p>Working source code implementing the mechanism is publicly available
+at the commits fixed in the evidence bundle. A person of ordinary skill
+in robotics software can read, build and run that code; this document is
+therefore an enabling disclosure and not a mere statement of a
+result.</p>
+<hr />
+<h3 id="problem">Problem</h3>
+<p>Teleoperation from a consumer input device is convenient and unsafe:
+the device has no certified deadman, and a dropped or jammed controller
+continues to command motion.</p>
+<h3 id="mechanism">Mechanism</h3>
+<p>The mapping from device state to actuation command is a <strong>pure
+function of the decoded device state</strong>, and it enforces two
+independent conditions:</p>
+<ol type="1">
+<li>A <strong>deadman</strong>: a designated control must be
+<em>continuously held</em> for any nonzero motion command to be
+produced. Absence of the hold produces a zero command, not the previous
+command. Loss of the input report is therefore indistinguishable from
+release, and fails to stop.</li>
+<li>An <strong>emergency-stop chord</strong>: a designated simultaneous
+combination of controls, chosen so that it cannot be produced by an
+ordinary grip or by a single stuck control, produces a safety-stop
+record which terminates the mission and is not overridable by subsequent
+motion input.</li>
+</ol>
+<p>The decoded state is converted to a bounded velocity command (a
+linear and angular velocity pair) with per-axis clamping, and then to a
+transport-level publish operation. The proposal path passes through the
+governor of Section 1, so the teleoperation command is admitted on the
+same terms as an autonomous one.</p>
+<h3 id="variants-and-generalizations">Variants and generalizations</h3>
+<ul>
+<li>The device may be: a game controller; a joystick; a keyboard; a
+touchscreen; a phone; a haptic master device; a wearable; a gesture
+sensor; a voice channel; a brain-computer interface; a networked web
+client.</li>
+<li>The deadman may be: a held button; a held trigger beyond a
+threshold; a grip sensor; a required periodic re-press; a required
+continuous stream of heartbeat messages at a minimum rate, with
+staleness treated as release; a dead-man's handle in hardware.</li>
+<li>The chord may be: a simultaneous button combination; a sequence
+within a time window; a distinctive gesture; a spoken phrase; a physical
+guarded switch. In each case the requirement is that ordinary operation
+and single-fault stuck inputs cannot produce it.</li>
+<li>The command may be: a body-frame velocity; a joint velocity; a
+Cartesian pose delta; an end-effector wrench; a discrete action; a
+waypoint.</li>
+<li>The transport may be: a robotics middleware topic; a serial link; a
+CAN bus; a fieldbus; a websocket; a radio link.</li>
+<li>The mapping may additionally impose: rate limiting; slew limiting;
+scaling by measured proximity to obstacles or humans; scaling by
+remaining battery; scaling by link latency, with latency beyond a bound
+treated as release.</li>
+</ul>
+<h3 id="reference-implementation">Reference implementation</h3>
+<p><code>kotoba-lang/teleop</code> (<code>deadman-held?</code>,
+<code>estop-chord-held?</code>, <code>-&gt;twist</code>,
+<code>-&gt;move-action</code>, <code>step</code>,
+<code>teleop-mission</code>, <code>teleop-action</code>,
+<code>cmd-vel-publish-op</code>),
+<code>kotoba-lang/com-sony-dualsense</code>.</p>
+<hr />
+<hr />
+<h2 id="中文摘要--chinese-abstract">中文摘要 / Chinese abstract</h2>
+<p>本文件为<strong>防御性公开</strong>（defensive
+publication）。作者自愿公开以下技术方案，使其成为<strong>现有技术</strong>（专利法第二十二条所称"为公众所知的技术"），并声明<strong>不为其中任何技术方案申请专利</strong>。参考实现的源代码自
+2026 年 8 月 19 日起在互联网上公开获取，采用 Apache-2.0
+许可，仓库地址与提交哈希见
+<code>https://github.com/com-junkawasaki/prior-art</code>。</p>
+<p><strong>由通用输入设备导出的持续握持（deadman）与组合键紧急停止</strong>：由设备状态到指令为纯函数；指定控件必须<strong>持续握持</strong>才产生非零运动指令，输入报文丢失与松手不可区分且导向停止；指定的<strong>组合键</strong>（普通握持与单点卡滞均无法产生）生成安全停止记录并终止任务。变型包括心跳消息速率不足即视为松手、按时延与人体接近度缩放指令。</p>
+<p>上文"变型与推广"一节系<strong>有意穷举列举</strong>，以使针对本机制之显而易见变化的在后申请面对的是明确的书面公开，而非仅仅是"显而易见"的主张。</p>
+<hr />
+<h2 id="statement-of-dedication">Statement of dedication</h2>
+<p>The author does not seek and will not seek patent protection for any
+subject matter disclosed in this document. This document and the
+referenced source code are published to establish the subject matter as
+prior art available to the public as of the publication date stated
+above. The source code remains licensed under the Apache License 2.0,
+whose Section 3 grants an express patent licence from each contributor
+to every recipient.</p>
+<p>Nothing in this document is an admission that any third party holds,
+or does not hold, rights in any subject matter described. Where a
+referenced repository is a clean-room, API-surface-compatible
+implementation of a third-party product, the disclosure is of the
+author's own implementation only.</p>
+
+</div>
+</body>
+</html>

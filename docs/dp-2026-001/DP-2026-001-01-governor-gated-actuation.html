@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Actuation gated by an independent governor, with the proposal and the permission held by separate parties</title>
+<meta name="description" content="A robot controlled or advised by a learned model (a neural policy, a large language model, a planner) can emit an actuation command that is physically unsafe. Filtering the model&#x27;s output inside the model, or inside the same program that generates it, does not bound the failure: the component that d">
+<meta name="author" content="Jun Kawasaki">
+<link rel="canonical" href="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-01-governor-gated-actuation.html">
+<link rel="stylesheet" href="../style.css">
+<meta name="keywords" content="robot safety; governor; action admission; safety classification; audit ledger; telemetry proof; human sign-off; mission bounding; autonomous systems; AI safety">
+<meta name="DC.title" content="Actuation gated by an independent governor, with the proposal and the permission held by separate parties">
+<meta name="DC.creator" content="Jun Kawasaki">
+<meta name="DC.date" content="2026-08-19">
+<meta name="DC.type" content="Text">
+<meta name="DC.rights" content="CC0 1.0 Universal">
+<meta name="citation_title" content="Actuation gated by an independent governor, with the proposal and the permission held by separate parties">
+<meta name="citation_author" content="Kawasaki, Jun">
+<meta name="citation_publication_date" content="2026/08/19">
+<meta name="citation_technical_report_institution" content="Defensive publication DP-2026-001">
+<meta name="citation_abstract_html_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-01-governor-gated-actuation.html">
+<meta name="citation_pdf_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/pdf/DP-2026-001-01-governor-gated-actuation.pdf">
+</head>
+<body>
+<div class="wrap">
+<nav class="rec"><p><a href="../">← DP-2026-001 index</a> · <a href="pdf/DP-2026-001-01-governor-gated-actuation.pdf">PDF</a> · record 1 of 10</p></nav>
+<hr>
+<h1
+id="actuation-gated-by-an-independent-governor-with-the-proposal-and-the-permission-held-by-separate-parties">Actuation
+gated by an independent governor, with the proposal and the permission
+held by separate parties</h1>
+<blockquote>
+<p><strong>Defensive publication.</strong> This document is published
+solely to place its subject matter into the public domain of technical
+knowledge as prior art. <strong>No patent protection is sought by the
+author for any subject matter described here.</strong></p>
+<p><strong>Author / declarant:</strong> Jun Kawasaki
+(<code>root@junkawasaki.com</code>) <strong>Disclosure set:</strong>
+DP-2026-001, part 1 of 10 · first published 2026-08-19 (UTC)
+<strong>Enabling reference implementation:</strong> public source code
+under <code>https://github.com/kotoba-lang/</code>, licensed Apache-2.0,
+fixed by commit and tree SHA-1 in the evidence bundle at
+<code>https://github.com/com-junkawasaki/prior-art</code> — that bundle
+carries RFC 3161 time-stamp tokens and OpenTimestamps attestations over
+the fixing manifest.</p>
+</blockquote>
+<h2 id="note-on-the-variants-and-generalizations-section-below">Note on
+the "Variants and generalizations" section below</h2>
+<p>The variants are stated deliberately and at length. They are
+disclosed so that a later filing directed to an obvious variation of the
+mechanism is met by an express <strong>written</strong> disclosure of
+that variation, and not merely by an argument that the variation would
+have been obvious. Where the text says "any", the word is intended in
+its ordinary broad sense and the enumeration following it is
+illustrative, not exhaustive.</p>
+<p>Working source code implementing the mechanism is publicly available
+at the commits fixed in the evidence bundle. A person of ordinary skill
+in robotics software can read, build and run that code; this document is
+therefore an enabling disclosure and not a mere statement of a
+result.</p>
+<hr />
+<h3 id="problem">Problem</h3>
+<p>A robot controlled or advised by a learned model (a neural policy, a
+large language model, a planner) can emit an actuation command that is
+physically unsafe. Filtering the model's output inside the model, or
+inside the same program that generates it, does not bound the failure:
+the component that decides what to do is the component that decides
+whether it is allowed.</p>
+<h3 id="mechanism">Mechanism</h3>
+<p>Two separate software components with separate authority:</p>
+<ol type="1">
+<li>An <strong>actor</strong> which may be arbitrary, learned,
+non-deterministic, or untrusted. It <strong>proposes</strong> an action.
+It has no path to actuation.</li>
+<li>A <strong>governor</strong> which is small, deterministic,
+independently authored, and independently reviewable. It <strong>admits
+or refuses</strong> the proposal. Only its admission reaches
+actuation.</li>
+</ol>
+<p>The proposal is a data record, not a function call, containing at
+minimum: an action identifier, the mission it belongs to, an action
+kind, a <strong>safety classification</strong> drawn from an ordered set
+(for example <code>:none</code>, <code>:low</code>,
+<code>:medium</code>, <code>:high</code>,
+<code>:safety-critical</code>), and parameters.</p>
+<p>The governor is given an explicit <strong>permitted set</strong> of
+safety classifications and returns a decision record
+(<code>{:gate/decision :permit}</code> / <code>:refuse</code> with a
+reason). An action whose classification is outside the permitted set is
+refused. An action whose classification exceeds a threshold additionally
+requires a recorded human sign-off before it can be admitted.</p>
+<p>A <strong>mission</strong> bounds the operation: one mission is one
+bounded operation with an explicit step ceiling and explicit boundaries
+(geographic, workspace, time). A mission does not loop internally;
+repetition is a durable outer loop that starts a new mission, so that
+every repetition re-enters admission.</p>
+<p>A <strong>safety-stop</strong> record is a first-class value with a
+cause (<code>:e-stop</code>, <code>:watchdog</code>,
+<code>:governor-refusal</code>, <code>:operator</code>) and a source,
+and terminates the mission.</p>
+<p>A <strong>telemetry proof</strong> binds a sensor observation (lidar
+return, force reading, contact, camera frame digest) to the mission and
+to a timestamp, and is appended to an append-only audit ledger, so that
+the sensing which justified an admission is recoverable after the
+fact.</p>
+<p>The governing library performs <strong>policy, not control</strong>:
+it does not drive motors. It produces the records a governor needs in
+order to refuse unsafe actuation before the command reaches
+hardware.</p>
+<h3 id="variants-and-generalizations">Variants and generalizations</h3>
+<ul>
+<li>The safety classification may be: an ordered enumeration; a numeric
+risk score with thresholds; a lattice or partial order; a vector of
+independent axes (energy, reach, human proximity, irreversibility)
+combined by any monotone rule; a learned classifier whose output is
+<em>itself</em> subject to a conservative default when it fails to
+classify.</li>
+<li>The governor may be: a program; a table; a decision tree; a set of
+first-order or Datalog rules; a formally verified module; a hardware
+interlock; a separate microcontroller; a separate process, container,
+address space, or physical machine; a quorum of two or more independent
+governors requiring unanimity or a stated majority; a governor that
+itself must be admitted by a higher governor.</li>
+<li>The actor may be: a neural network policy; a large language model; a
+classical planner; a human teleoperator; a scripted sequence; another
+robot; a fleet scheduler; any composition of these.</li>
+<li>Admission may be: synchronous per action; batched per plan; staged
+(plan admitted, then each step re-admitted); revocable mid-execution;
+time-limited by a deadline or lease; quantity-limited by a budget of
+admitted actions; attenuated on delegation, so a sub-actor receives
+strictly fewer permissions than its parent.</li>
+<li>Refusal may be: a hard stop; a substitution with a stated safe
+default; a request for human sign-off; a degradation to a lower safety
+class; an escalation to a supervisor actor; a transition to a loiter,
+hold, or park behaviour.</li>
+<li>The audit record may be: an append-only file; a database table; a
+signed log; a hash-linked chain; a Merkle tree; a content-addressed
+object store; a distributed ledger; a quorum-certified reference. The
+record may be a full copy of the observation or a cryptographic digest
+of it with the observation retained separately.</li>
+<li>The bounded-operation unit may be called a mission, task, job,
+episode, work order, or transaction, and may be bounded by any of: step
+count, wall-clock deadline, energy budget, geofence, joint-space region,
+Cartesian workspace region, allowed object set, allowed human-proximity
+envelope.</li>
+<li>Human sign-off may be: a signature; a two-person rule; a hardware
+key; a biometric; a recorded verbal confirmation; an out-of-band
+confirmation on a separate channel.</li>
+<li>The whole arrangement applies unchanged to: mobile robots,
+manipulators, aerial vehicles, underwater vehicles, surface vessels,
+spacecraft, agricultural machinery, construction machinery, medical
+devices, laboratory automation, industrial process plant, and software
+agents whose effects are non-physical (payments, messages,
+deployments).</li>
+</ul>
+<h3 id="reference-implementation">Reference implementation</h3>
+<p><code>kotoba-lang/robotics</code> (<code>kotoba.robotics</code>:
+<code>mission</code>, <code>action</code>,
+<code>requires-sign-off?</code>, <code>safety-stop</code>,
+<code>telemetry-proof</code>, <code>gate</code>),
+<code>kotoba-lang/governor</code>.</p>
+<hr />
+<hr />
+<h2 id="中文摘要--chinese-abstract">中文摘要 / Chinese abstract</h2>
+<p>本文件为<strong>防御性公开</strong>（defensive
+publication）。作者自愿公开以下技术方案，使其成为<strong>现有技术</strong>（专利法第二十二条所称"为公众所知的技术"），并声明<strong>不为其中任何技术方案申请专利</strong>。参考实现的源代码自
+2026 年 8 月 19 日起在互联网上公开获取，采用 Apache-2.0
+许可，仓库地址与提交哈希见
+<code>https://github.com/com-junkawasaki/prior-art</code>。</p>
+<p><strong>由独立监管器（governor）把关的机器人执行动作</strong>：行为体（可为神经网络策略、大语言模型、规划器或人类遥操作者）只能<strong>提议</strong>动作，不具有到达执行机构的通路；一个独立编写、可独立审查的监管器依据动作的<strong>安全等级</strong>准许或拒绝该提议。任务（mission）为一次有界操作，具有明确的步数上限与边界（地理围栏、工作空间、时间），内部不循环。安全停止（safety-stop）与<strong>遥测证明</strong>（将传感观测绑定到任务并写入只可追加的审计账本）均为一等数据记录。变型包括：安全等级可为有序枚举、数值风险分、格结构或多轴向量；监管器可为程序、规则集、经形式化验证的模块、硬件联锁、独立进程或独立机器、或由两个以上独立监管器组成的法定人数；准许可为逐动作、按批、分阶段、可撤销、有时限或有配额，并在委派时<strong>递减</strong>权限。</p>
+<p>上文"变型与推广"一节系<strong>有意穷举列举</strong>，以使针对本机制之显而易见变化的在后申请面对的是明确的书面公开，而非仅仅是"显而易见"的主张。</p>
+<hr />
+<h2 id="statement-of-dedication">Statement of dedication</h2>
+<p>The author does not seek and will not seek patent protection for any
+subject matter disclosed in this document. This document and the
+referenced source code are published to establish the subject matter as
+prior art available to the public as of the publication date stated
+above. The source code remains licensed under the Apache License 2.0,
+whose Section 3 grants an express patent licence from each contributor
+to every recipient.</p>
+<p>Nothing in this document is an admission that any third party holds,
+or does not hold, rights in any subject matter described. Where a
+referenced repository is a clean-room, API-surface-compatible
+implementation of a third-party product, the disclosure is of the
+author's own implementation only.</p>
+
+</div>
+</body>
+</html>

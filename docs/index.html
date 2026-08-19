@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Defensive publications — prior art, no patents sought / 防御性公开</title>
+<meta name="description" content="Defensive publications placing robotics mechanisms into the public domain as prior art (现有技术), with RFC 3161 and OpenTimestamps evidence. No patents sought by the author.">
+<meta name="author" content="Jun Kawasaki">
+<meta name="keywords" content="defensive publication; prior art; 防御性公开; 现有技术; 专利无效; robotics; 机器人; RFC 3161; OpenTimestamps; Jun Kawasaki">
+<link rel="canonical" href="https://com-junkawasaki.github.io/prior-art/">
+<link rel="stylesheet" href="style.css">
+<meta name="DC.title" content="Defensive publications — prior art, no patents sought / 防御性公开">
+<meta name="DC.creator" content="Jun Kawasaki">
+<meta name="DC.date" content="2026-08-19">
+<meta name="DC.rights" content="CC0 1.0 Universal">
+</head>
+<body>
+<div class="wrap">
+<h1>Defensive publications <span class="badge">no patents sought</span></h1>
+<p class="meta">Jun Kawasaki · first published 2026-08-19 (UTC) · dedicated to the public domain under CC0 1.0 ·
+source: <a href="https://github.com/com-junkawasaki/prior-art">github.com/com-junkawasaki/prior-art</a></p>
+
+<p>Each document below is a <strong>defensive publication</strong>: it is published solely to place its
+subject matter into the public domain of technical knowledge as <strong>prior art</strong>, so that a later
+filing directed to the same mechanism — or to an obvious variation of it — is met by an express written
+disclosure. <strong>No patent protection is sought by the author for any subject matter described.</strong></p>
+
+<p>Every section is written as <em>problem → mechanism → <strong>variants and generalizations</strong></em>.
+The variant enumerations are deliberate and broad: novelty is defeated by the mechanism, but obviousness is
+defeated only by having written the variation down.</p>
+
+<h2>DP-2026-001 — Governed robotics (ten records)</h2>
+<p class="meta">Enabling reference implementations: 31 public repositories under
+<a href="https://github.com/kotoba-lang">github.com/kotoba-lang</a>, Apache-2.0, fixed by commit and tree
+SHA-1 in the <a href="https://github.com/com-junkawasaki/prior-art/blob/main/DP-2026-001-robotics/evidence-manifest.txt">evidence manifest</a>.
+Approximately 17,000 lines of source and 9,000 lines of tests.</p>
+<ol>
+<li><a href="dp-2026-001/DP-2026-001-01-governor-gated-actuation.html">Actuation gated by an independent governor, with the proposal and the permission held by separate parties</a><br><span class="meta">robot safety; governor; action admission; safety classification; audit ledger; telemetry proof; human sign-off…</span></li>
+<li><a href="dp-2026-001/DP-2026-001-02-capability-typed-actuation.html">Actuation as a typed capability, such that an ungranted actuation cannot be expressed</a><br><span class="meta">capability security; object capability; effect system; deny by default; sandboxing; WebAssembly; ambient autho…</span></li>
+<li><a href="dp-2026-001/DP-2026-001-03-pre-dispatch-verified-choreography.html">Multi-agent choreography verified in full before any vehicle is dispatched</a><br><span class="meta">drone light show; swarm choreography; pre-flight verification; separation constraint; geofence; multi-agent mo…</span></li>
+<li><a href="dp-2026-001/DP-2026-001-04-deadman-chord-estop.html">Deadman and chord-based emergency stop derived from a general-purpose input device</a><br><span class="meta">teleoperation; deadman switch; emergency stop; gamepad; chord input; heartbeat timeout; fail safe; human-robot…</span></li>
+<li><a href="dp-2026-001/DP-2026-001-05-actuator-bom-torque-gate.html">Actuator bill-of-materials derived from the kinematic description, with continuous-torque validation as a design gate</a><br><span class="meta">URDF; actuator sizing; bill of materials; continuous torque; robot design automation; inertia validation; join…</span></li>
+<li><a href="dp-2026-001/DP-2026-001-06-single-dynamics-kernel.html">One deterministic, dependency-free dynamics kernel serving simulation, training, and control</a><br><span class="meta">articulated body dynamics; spatial vector algebra; recursive Newton-Euler; composite rigid body; GJK; EPA; inv…</span></li>
+<li><a href="dp-2026-001/DP-2026-001-07-domain-randomization-as-data.html">Domain randomization expressed as data, with reproducibility by construction</a><br><span class="meta">domain randomization; reinforcement learning; sim-to-real transfer; reproducibility; seeded generator; vectori…</span></li>
+<li><a href="dp-2026-001/DP-2026-001-08-unified-occupancy-fusion.html">One occupancy representation fused from heterogeneous range sources through a single ingest interface</a><br><span class="meta">occupancy grid; sensor fusion; lidar; depth camera; A-star path planning; pure pursuit; inflation; stuck detec…</span></li>
+<li><a href="dp-2026-001/DP-2026-001-09-vehicle-parameterized-gnc.html">One guidance-navigation-control step function parameterized by vehicle physics across media</a><br><span class="meta">guidance navigation control; multi-domain autonomy; bicycle model; fixed wing; multirotor; marine vehicle; het…</span></li>
+<li><a href="dp-2026-001/DP-2026-001-10-content-addressed-execution.html">Content-addressed identity for a robot execution, so that what ran is recoverable by digest</a><br><span class="meta">content addressing; execution identity; provenance; audit; reproducibility; effect log; receipt; causal DAG; i…</span></li>
+</ol>
+<p><a href="dp-2026-001/full.html"><strong>Full text of all ten as one document</strong></a> ·
+<a href="https://github.com/com-junkawasaki/prior-art/tree/main/DP-2026-001-robotics/tdcommons">PDFs</a></p>
+
+<h2>Evidence, and its honest limits</h2>
+<ul>
+<li><strong>Content fixing.</strong> The evidence manifest records each repository's commit and tree SHA-1.
+A git tree SHA-1 commits every byte of the tree by Merkle construction, so one 6.7&nbsp;kB file fixes the
+complete content of all 31 repositories.</li>
+<li><strong><a href="https://www.rfc-editor.org/rfc/rfc3161.html">RFC 3161</a> time-stamp tokens</strong>
+over that manifest and over the disclosure text. <strong>These are from FreeTSA, which is not an accredited
+timestamp authority in any jurisdiction.</strong> They are independently verifiable — not accredited. They
+are not equivalent to a token from Japan's 総務大臣認定タイムスタンプ, an eIDAS qualified timestamp, or
+China's 联合信任时间戳服务中心. Because the digests are already fixed, an accredited token obtained later
+covers the same digests and <em>strengthens</em> this bundle rather than replacing anything in it.</li>
+<li><strong><a href="https://opentimestamps.org/">OpenTimestamps</a></strong> attestations anchored in the
+Bitcoin blockchain — the form of evidence Chinese internet courts have accepted (最高人民法院 online-litigation rules).</li>
+<li><strong><a href="https://archive.softwareheritage.org/">Software Heritage</a></strong> archival of the
+source repositories, and Internet Archive snapshots of these pages, so the record does not depend on the
+author continuing to host it.</li>
+<li><strong>What none of it proves.</strong> It proves the content was public on a date. It does not prove
+the content is novel, useful or correct, and it says nothing about whether the subject matter infringes
+anyone else's rights.</li>
+</ul>
+<p><a href="https://github.com/com-junkawasaki/prior-art/blob/main/DP-2026-001-robotics/VERIFY.md">How to verify all of the above yourself</a>
+— with <code>openssl</code>, <code>git</code> and <code>curl</code>, trusting nothing here.</p>
+
+<hr>
+<h2 lang="zh">中文说明</h2>
+<div class="zh" lang="zh">
+<p>本站收录<strong>防御性公开</strong>（defensive publication）文件。公开的唯一目的，是使其中的技术方案
+自公开之日起成为<strong>现有技术</strong>（中国专利法第二十二条所称"为公众所知的技术"），从而阻止他人就
+相同或显而易见变形的技术方案取得在后专利。<strong>作者声明不为其中任何技术方案申请专利。</strong></p>
+<p>每份文件均按"课题 — 机构 — <strong>变型与推广</strong>"三段撰写。变型系有意穷举列举：新规性可由机制
+本身击破，而显而易见性只能由<strong>已经写下该变形</strong>来击破。</p>
+<p>DP-2026-001《受监管的机器人技术》共十份记录：</p>
+<ol>
+<li><a href="dp-2026-001/DP-2026-001-01-governor-gated-actuation.html">由独立监管器把关的机器人执行动作</a></li>
+<li><a href="dp-2026-001/DP-2026-001-02-capability-typed-actuation.html">将执行机构操作表示为带类型的能力，使未被授予的操作无法被表达</a></li>
+<li><a href="dp-2026-001/DP-2026-001-03-pre-dispatch-verified-choreography.html">在任何飞行器起飞之前对整场多智能体编队进行完整验证</a></li>
+<li><a href="dp-2026-001/DP-2026-001-04-deadman-chord-estop.html">由通用输入设备导出的持续握持与组合键紧急停止</a></li>
+<li><a href="dp-2026-001/DP-2026-001-05-actuator-bom-torque-gate.html">由运动学描述导出执行器物料清单，并以连续转矩校验作为设计闸门</a></li>
+<li><a href="dp-2026-001/DP-2026-001-06-single-dynamics-kernel.html">一个确定性、无依赖的动力学内核同时服务于仿真、训练与控制</a></li>
+<li><a href="dp-2026-001/DP-2026-001-07-domain-randomization-as-data.html">域随机化表示为数据而非代码，从而构造性可复现</a></li>
+<li><a href="dp-2026-001/DP-2026-001-08-unified-occupancy-fusion.html">异构测距源经单一接入接口融合为同一占据表示</a></li>
+<li><a href="dp-2026-001/DP-2026-001-09-vehicle-parameterized-gnc.html">一个制导-导航-控制步进函数由载具物理参数化，跨越介质</a></li>
+<li><a href="dp-2026-001/DP-2026-001-10-content-addressed-execution.html">机器人执行的内容寻址身份</a></li>
+</ol>
+<p>参考实现为 <a href="https://github.com/kotoba-lang">github.com/kotoba-lang</a> 下 31 个公开仓库，
+采用 Apache-2.0 许可，约 17,000 行源码与 9,000 行测试，并以提交哈希（commit / tree SHA-1）固定于证据清单中。</p>
+<p><strong>关于时间戳的说明：</strong>本站所附 RFC 3161 令牌来自 FreeTSA，<strong>并非任何法域的认定时间戳
+服务机构</strong>——可被独立验证，但不等同于中国联合信任时间戳服务中心、日本总务大臣认定时间戳或 eIDAS
+合格时间戳。由于摘要（digest）已被固定，日后如需具备上述效力的时间戳，可就同一摘要另行申请，届时为增强
+而非替换。另附锚定于比特币区块链的 OpenTimestamps 存证。</p>
+</div>
+
+</div>
+</body>
+</html>

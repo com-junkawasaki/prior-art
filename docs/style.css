@@ -1,0 +1,12 @@
+*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","PingFang SC","Noto Sans CJK SC",sans-serif;line-height:1.65;color:#16181d;background:#fff;margin:0;padding:0}
+.wrap{max-width:52rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+h1{font-size:1.7rem;line-height:1.3;margin:0 0 .4rem}h2{font-size:1.15rem;margin:2rem 0 .5rem;padding-bottom:.25rem;border-bottom:1px solid #e3e5ea}h3{font-size:1rem;margin:1.4rem 0 .35rem}
+a{color:#0b57d0}code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;background:#f3f4f6;padding:.1em .3em;border-radius:3px}
+blockquote{margin:1rem 0;padding:.6rem 0 .6rem 1rem;border-left:3px solid #9aa0a6;color:#3c4043;font-size:.94rem}
+ul{padding-left:1.35rem}li{margin:.3rem 0}hr{border:0;border-top:1px solid #e3e5ea;margin:2rem 0}
+table{border-collapse:collapse;font-size:.92rem;width:100%;overflow-x:auto;display:block}th,td{border:1px solid #d8dae0;padding:.35rem .6rem;text-align:left}
+.meta{font-size:.87rem;color:#5f6368;margin:0 0 1.5rem}.zh{}
+.badge{display:inline-block;font-size:.78rem;background:#e8f0fe;color:#0b57d0;padding:.15rem .5rem;border-radius:10px;margin-right:.4rem}
+nav.rec{font-size:.92rem;margin:1rem 0 0}nav.rec ol{padding-left:1.4rem}
+@media(prefers-color-scheme:dark){body{background:#15161a;color:#e6e8eb}a{color:#8ab4f8}code{background:#26282d}
+h2{border-color:#2d3036}th,td{border-color:#3a3d44}.meta{color:#9aa0a6}blockquote{color:#bdc1c6}.badge{background:#1f2a3d;color:#8ab4f8}}

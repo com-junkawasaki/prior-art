@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>One deterministic, dependency-free dynamics kernel serving simulation, training, and control</title>
+<meta name="description" content="Robotics practice maintains at least three implementations of the same physics: one inside the simulator, one inside the training environment, and one inside the controller&#x27;s model. They disagree, and the disagreement is discovered on the real robot. The simulators are additionally platform-bound: t">
+<meta name="author" content="Jun Kawasaki">
+<link rel="canonical" href="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-06-single-dynamics-kernel.html">
+<link rel="stylesheet" href="../style.css">
+<meta name="keywords" content="articulated body dynamics; spatial vector algebra; recursive Newton-Euler; composite rigid body; GJK; EPA; inverse kinematics; damped least squares; LQR; trajectory generation; deterministic simulation; sim-to-real">
+<meta name="DC.title" content="One deterministic, dependency-free dynamics kernel serving simulation, training, and control">
+<meta name="DC.creator" content="Jun Kawasaki">
+<meta name="DC.date" content="2026-08-19">
+<meta name="DC.type" content="Text">
+<meta name="DC.rights" content="CC0 1.0 Universal">
+<meta name="citation_title" content="One deterministic, dependency-free dynamics kernel serving simulation, training, and control">
+<meta name="citation_author" content="Kawasaki, Jun">
+<meta name="citation_publication_date" content="2026/08/19">
+<meta name="citation_technical_report_institution" content="Defensive publication DP-2026-001">
+<meta name="citation_abstract_html_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-06-single-dynamics-kernel.html">
+<meta name="citation_pdf_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/pdf/DP-2026-001-06-single-dynamics-kernel.pdf">
+</head>
+<body>
+<div class="wrap">
+<nav class="rec"><p><a href="../">← DP-2026-001 index</a> · <a href="pdf/DP-2026-001-06-single-dynamics-kernel.pdf">PDF</a> · record 6 of 10</p></nav>
+<hr>
+<h1
+id="one-deterministic-dependency-free-dynamics-kernel-serving-simulation-training-and-control">One
+deterministic, dependency-free dynamics kernel serving simulation,
+training, and control</h1>
+<blockquote>
+<p><strong>Defensive publication.</strong> This document is published
+solely to place its subject matter into the public domain of technical
+knowledge as prior art. <strong>No patent protection is sought by the
+author for any subject matter described here.</strong></p>
+<p><strong>Author / declarant:</strong> Jun Kawasaki
+(<code>root@junkawasaki.com</code>) <strong>Disclosure set:</strong>
+DP-2026-001, part 6 of 10 · first published 2026-08-19 (UTC)
+<strong>Enabling reference implementation:</strong> public source code
+under <code>https://github.com/kotoba-lang/</code>, licensed Apache-2.0,
+fixed by commit and tree SHA-1 in the evidence bundle at
+<code>https://github.com/com-junkawasaki/prior-art</code> — that bundle
+carries RFC 3161 time-stamp tokens and OpenTimestamps attestations over
+the fixing manifest.</p>
+</blockquote>
+<h2 id="note-on-the-variants-and-generalizations-section-below">Note on
+the "Variants and generalizations" section below</h2>
+<p>The variants are stated deliberately and at length. They are
+disclosed so that a later filing directed to an obvious variation of the
+mechanism is met by an express <strong>written</strong> disclosure of
+that variation, and not merely by an argument that the variation would
+have been obvious. Where the text says "any", the word is intended in
+its ordinary broad sense and the enumeration following it is
+illustrative, not exhaustive.</p>
+<p>Working source code implementing the mechanism is publicly available
+at the commits fixed in the evidence bundle. A person of ordinary skill
+in robotics software can read, build and run that code; this document is
+therefore an enabling disclosure and not a mere statement of a
+result.</p>
+<hr />
+<h3 id="problem">Problem</h3>
+<p>Robotics practice maintains at least three implementations of the
+same physics: one inside the simulator, one inside the training
+environment, and one inside the controller's model. They disagree, and
+the disagreement is discovered on the real robot. The simulators are
+additionally platform-bound: they cannot run in a browser, in a
+serverless worker, or inside a verifier.</p>
+<h3 id="mechanism">Mechanism</h3>
+<p>A single <strong>pure, deterministic, zero-dependency</strong>
+articulated-body dynamics kernel, written in a portable source language
+and compiled to every target that needs it (server runtime, browser via
+WebAssembly, native ahead-of-time binary, and a reference interpreter
+used as an oracle), such that the same code answers all three roles.</p>
+<p>The kernel implements, on spatial-vector (Plücker) algebra:</p>
+<ul>
+<li>rigid-body and articulated-body state, with joint transforms and
+motion subspaces per joint type;</li>
+<li>forward kinematics to world poses, and the <strong>geometric
+Jacobian</strong> per link;</li>
+<li>the <strong>recursive Newton-Euler</strong> algorithm for inverse
+dynamics and bias forces, and the <strong>composite rigid-body</strong>
+algorithm for the mass matrix, with a factorization-based linear
+solve;</li>
+<li><strong>forward dynamics</strong> and gravity-compensation
+torques;</li>
+<li>contact detection by <strong>GJK</strong> distance and
+<strong>EPA</strong> penetration on convex shapes, oriented-bounding-box
+separating-axis tests with manifold generation, sphere–plane and
+conservative-advancement time-of-impact;</li>
+<li>contact resolution by impulses with an effective-mass computation,
+friction via a tangent basis, warm starting, and Baumgarte
+stabilization; joint-limit resolution by the same impulse
+machinery;</li>
+<li><strong>inverse kinematics</strong> by damped-least-squares on
+position and on full pose, with an SO(3) orientation error;</li>
+<li>an <strong>LQR</strong> controller obtained by linearizing about an
+operating point and solving the discrete algebraic Riccati
+equation;</li>
+<li>trajectory generation: cubic, quintic, minimum-jerk, and
+waypoint-sequenced;</li>
+<li>a <strong>vectorized batch</strong> stepping interface with
+per-environment configuration, for training.</li>
+</ul>
+<p>Because the kernel is pure and has no dependencies, its determinism
+is testable by identity: the same inputs produce byte-identical outputs
+on every target, and a <strong>parity harness</strong> compares targets
+against the reference interpreter. Because it has no I/O, it can be
+embedded inside the governor of Section 1 — a governor can
+<em>predict</em> the consequence of a proposed action using the same
+physics the simulator used, before admitting it.</p>
+<h3 id="variants-and-generalizations">Variants and generalizations</h3>
+<ul>
+<li>The portable source language may be any language with multiple
+compilation targets; the targets may include native machine code,
+WebAssembly, JavaScript, a bytecode, or an interpreted reference form.
+The claim is the <em>single-kernel, multi-target, parity-checked</em>
+arrangement, not a particular language.</li>
+<li>The dynamics formulation may be: spatial-vector recursive algorithms
+as above; maximal-coordinate with constraints; reduced-coordinate
+Lagrangian; articulated-body algorithm; featherstone variants; a
+differentiable formulation carrying gradients.</li>
+<li>Contact may be resolved by: sequential impulses; projected
+Gauss-Seidel; a linear- or nonlinear-complementarity-problem solver;
+compliant/penalty contact; position-based dynamics; an implicit
+time-stepping scheme.</li>
+<li>The controller may be: LQR; PD with gravity compensation; computed
+torque; model-predictive control; a learned policy; a hybrid where the
+learned policy proposes and a model-based term bounds.</li>
+<li>Determinism may be secured by: fixed-point arithmetic; a specified
+floating-point evaluation order with no fast-math reassociation; a
+specified reduction order in batch operations; a recorded seed for every
+stochastic element; byte-comparison against a reference target.</li>
+<li>The three roles unified may be any subset or superset of:
+simulation, training-environment stepping, controller internal model,
+governor's predictive check, digital twin, hardware-in-the-loop rig,
+post-hoc accident reconstruction, and a certification artifact.</li>
+<li>The kernel may be shipped as: a library; a WebAssembly module with a
+declared import set (Section 2); a native shared object; a service.
+Where shipped as a capability-gated module, it has no ambient authority
+and its outputs are values, so it cannot actuate by itself.</li>
+</ul>
+<h3 id="reference-implementation">Reference implementation</h3>
+<p><code>kotoba-lang/com-nvidia-isaac-sim</code> (spatial algebra
+<code>plucker</code>/<code>crm</code>/<code>crf</code>/<code>spatial-inertia</code>;
+<code>mass-matrix</code>, <code>forward-dynamics</code>,
+<code>inverse-dynamics</code>, <code>gravity-torque</code>,
+<code>geometric-jacobian</code>, <code>point-jacobian</code>;
+<code>gjk-distance</code>, <code>epa-penetration</code>,
+<code>obb-sat</code>, <code>obb-manifold</code>,
+<code>conservative-advancement-toi</code>;
+<code>resolve-contacts</code>,
+<code>resolve-static-contact-friction</code>,
+<code>warm-start-static-contact</code>, <code>resolve-limits</code>;
+<code>position-ik</code>, <code>pose-ik</code>, <code>solve-dls</code>;
+<code>solve-dare</code>, <code>compute-gain</code>;
+<code>cubic-polynomial-trajectory</code>,
+<code>quintic-polynomial-trajectory</code>, <code>min-jerk</code>,
+<code>waypoint-trajectory</code>; <code>step-vectorized</code>,
+<code>step-vectorized-per-env</code>, <code>set-pd-drive</code>),
+<code>kotoba-lang/physics</code>, <code>kotoba-lang/physics-2d</code>,
+<code>kotoba-lang/kami-engine</code>.</p>
+<hr />
+<hr />
+<h2 id="中文摘要--chinese-abstract">中文摘要 / Chinese abstract</h2>
+<p>本文件为<strong>防御性公开</strong>（defensive
+publication）。作者自愿公开以下技术方案，使其成为<strong>现有技术</strong>（专利法第二十二条所称"为公众所知的技术"），并声明<strong>不为其中任何技术方案申请专利</strong>。参考实现的源代码自
+2026 年 8 月 19 日起在互联网上公开获取，采用 Apache-2.0
+许可，仓库地址与提交哈希见
+<code>https://github.com/com-junkawasaki/prior-art</code>。</p>
+<p><strong>一个确定性、无依赖的动力学内核同时服务于仿真、训练与控制</strong>：基于空间向量（Plücker）代数实现正运动学、几何雅可比、递归牛顿-欧拉逆动力学、复合刚体质量矩阵、正动力学与重力补偿；GJK
+距离与 EPA
+穿透、有向包围盒分离轴与流形生成、保守推进碰撞时刻；冲量法接触求解含有效质量、切向摩擦、热启动与
+Baumgarte
+稳定化，关节限位复用同一机制；阻尼最小二乘位置与位姿逆运动学；线性化后解离散代数
+Riccati 方程得到
+LQR；三次、五次、最小抖动与航路点轨迹生成；带逐环境配置的<strong>向量化批处理</strong>步进。该内核为纯函数且无依赖，可编译到原生、WebAssembly
+与参考解释器等多目标并以<strong>一致性校验</strong>逐字节比对，因此可嵌入监管器中，在准许某动作之前用与仿真相同的物理<strong>预测其后果</strong>。</p>
+<p>上文"变型与推广"一节系<strong>有意穷举列举</strong>，以使针对本机制之显而易见变化的在后申请面对的是明确的书面公开，而非仅仅是"显而易见"的主张。</p>
+<hr />
+<h2 id="statement-of-dedication">Statement of dedication</h2>
+<p>The author does not seek and will not seek patent protection for any
+subject matter disclosed in this document. This document and the
+referenced source code are published to establish the subject matter as
+prior art available to the public as of the publication date stated
+above. The source code remains licensed under the Apache License 2.0,
+whose Section 3 grants an express patent licence from each contributor
+to every recipient.</p>
+<p>Nothing in this document is an admission that any third party holds,
+or does not hold, rights in any subject matter described. Where a
+referenced repository is a clean-room, API-surface-compatible
+implementation of a third-party product, the disclosure is of the
+author's own implementation only.</p>
+
+</div>
+</body>
+</html>

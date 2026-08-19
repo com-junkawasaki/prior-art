@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Domain randomization expressed as data, with reproducibility by construction</title>
+<meta name="description" content="A policy trained in simulation transfers poorly unless the simulation is randomized. Randomization implemented as code inside the environment is neither auditable nor reproducible: the distribution that was actually sampled is not recoverable from the artifact, and a run cannot be replayed exactly. ">
+<meta name="author" content="Jun Kawasaki">
+<link rel="canonical" href="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-07-domain-randomization-as-data.html">
+<link rel="stylesheet" href="../style.css">
+<meta name="keywords" content="domain randomization; reinforcement learning; sim-to-real transfer; reproducibility; seeded generator; vectorized environment; declarative configuration">
+<meta name="DC.title" content="Domain randomization expressed as data, with reproducibility by construction">
+<meta name="DC.creator" content="Jun Kawasaki">
+<meta name="DC.date" content="2026-08-19">
+<meta name="DC.type" content="Text">
+<meta name="DC.rights" content="CC0 1.0 Universal">
+<meta name="citation_title" content="Domain randomization expressed as data, with reproducibility by construction">
+<meta name="citation_author" content="Kawasaki, Jun">
+<meta name="citation_publication_date" content="2026/08/19">
+<meta name="citation_technical_report_institution" content="Defensive publication DP-2026-001">
+<meta name="citation_abstract_html_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-07-domain-randomization-as-data.html">
+<meta name="citation_pdf_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/pdf/DP-2026-001-07-domain-randomization-as-data.pdf">
+</head>
+<body>
+<div class="wrap">
+<nav class="rec"><p><a href="../">← DP-2026-001 index</a> · <a href="pdf/DP-2026-001-07-domain-randomization-as-data.pdf">PDF</a> · record 7 of 10</p></nav>
+<hr>
+<h1
+id="domain-randomization-expressed-as-data-with-reproducibility-by-construction">Domain
+randomization expressed as data, with reproducibility by
+construction</h1>
+<blockquote>
+<p><strong>Defensive publication.</strong> This document is published
+solely to place its subject matter into the public domain of technical
+knowledge as prior art. <strong>No patent protection is sought by the
+author for any subject matter described here.</strong></p>
+<p><strong>Author / declarant:</strong> Jun Kawasaki
+(<code>root@junkawasaki.com</code>) <strong>Disclosure set:</strong>
+DP-2026-001, part 7 of 10 · first published 2026-08-19 (UTC)
+<strong>Enabling reference implementation:</strong> public source code
+under <code>https://github.com/kotoba-lang/</code>, licensed Apache-2.0,
+fixed by commit and tree SHA-1 in the evidence bundle at
+<code>https://github.com/com-junkawasaki/prior-art</code> — that bundle
+carries RFC 3161 time-stamp tokens and OpenTimestamps attestations over
+the fixing manifest.</p>
+</blockquote>
+<h2 id="note-on-the-variants-and-generalizations-section-below">Note on
+the "Variants and generalizations" section below</h2>
+<p>The variants are stated deliberately and at length. They are
+disclosed so that a later filing directed to an obvious variation of the
+mechanism is met by an express <strong>written</strong> disclosure of
+that variation, and not merely by an argument that the variation would
+have been obvious. Where the text says "any", the word is intended in
+its ordinary broad sense and the enumeration following it is
+illustrative, not exhaustive.</p>
+<p>Working source code implementing the mechanism is publicly available
+at the commits fixed in the evidence bundle. A person of ordinary skill
+in robotics software can read, build and run that code; this document is
+therefore an enabling disclosure and not a mere statement of a
+result.</p>
+<hr />
+<h3 id="problem">Problem</h3>
+<p>A policy trained in simulation transfers poorly unless the simulation
+is randomized. Randomization implemented as code inside the environment
+is neither auditable nor reproducible: the distribution that was
+actually sampled is not recoverable from the artifact, and a run cannot
+be replayed exactly.</p>
+<h3 id="mechanism">Mechanism</h3>
+<p>The randomization is a <strong>declarative document</strong>, not
+code. It states, per physical parameter, a range or distribution; per
+environment instance in a vectorized batch, a sampled configuration is
+drawn; the draw uses an <strong>explicitly seeded, specified
+generator</strong> so that the batch is a pure function of the seed and
+the document.</p>
+<p>Consequently: the exact configuration of every environment instance
+is recorded and re-derivable; a training run is replayable from
+(document, seed); and a change to the randomization is a diff of a
+document rather than a diff of a program.</p>
+<p>The batch exposes per-environment configuration set and clear
+operations, per-environment state read and write, and a stepping
+interface returning per-environment observation, reward, termination,
+and truncation.</p>
+<h3 id="variants-and-generalizations">Variants and generalizations</h3>
+<ul>
+<li>The document may be: EDN, JSON, YAML, TOML, a protocol-buffer
+message, a database row set, a content-addressed object.</li>
+<li>The randomized quantities may include: masses; inertias; friction
+coefficients; restitution; joint damping and stiffness; actuator gains,
+latency, backlash, and saturation; sensor noise, bias, drift, dropout,
+and latency; geometry scale; initial state; goal placement; obstacle
+placement and count; lighting, texture, and camera intrinsics and
+extrinsics; wind, current, and terrain; communication delay and packet
+loss.</li>
+<li>The distribution may be: uniform; normal; truncated normal;
+log-uniform; categorical; a mixture; an empirical distribution from
+measured hardware; an adversarial or curriculum-scheduled distribution
+whose schedule is itself part of the document.</li>
+<li>The generator may be any specified pseudorandom generator with
+recorded seed and recorded algorithm; counter-based generators
+additionally allow the per-environment stream to be derived from (seed,
+environment index, parameter index) so that instances are independent
+and individually reproducible without sequential draw order.</li>
+<li>The recorded artifact may be: the seed and document only; the seed,
+document, and generator identity; the fully expanded per-environment
+configuration; a digest of any of these bound into a training receipt
+together with the code version, so that a trained policy names the
+distribution it was trained on.</li>
+<li>The same arrangement applies to randomized testing of any system,
+not only robot learning: fuzzing, fault injection, load generation, and
+Monte-Carlo safety assessment.</li>
+</ul>
+<h3 id="reference-implementation">Reference implementation</h3>
+<p><code>kotoba-lang/com-nvidia-isaac-lab</code>
+(<code>load-scene-edn</code>, <code>range-new</code>,
+<code>range-fixed</code>, <code>dr-around</code>,
+<code>dr-identity</code>, <code>dr-sample</code>,
+<code>dr-sample-n</code>, <code>lcg-new</code>, <code>lcg-step</code>,
+<code>next-uniform</code>, <code>randomize-physics</code>,
+<code>vectorized-cartpole-env-new</code>,
+<code>vectorized-reach-env-new</code>,
+<code>set-per-env-configs!</code>, <code>per-env-configs</code>,
+<code>step-result</code>),
+<code>kotoba-lang/org-farama-gymnasium</code>.</p>
+<hr />
+<hr />
+<h2 id="中文摘要--chinese-abstract">中文摘要 / Chinese abstract</h2>
+<p>本文件为<strong>防御性公开</strong>（defensive
+publication）。作者自愿公开以下技术方案，使其成为<strong>现有技术</strong>（专利法第二十二条所称"为公众所知的技术"），并声明<strong>不为其中任何技术方案申请专利</strong>。参考实现的源代码自
+2026 年 8 月 19 日起在互联网上公开获取，采用 Apache-2.0
+许可，仓库地址与提交哈希见
+<code>https://github.com/com-junkawasaki/prior-art</code>。</p>
+<p><strong>域随机化表示为数据而非代码，从而构造性可复现</strong>：逐物理参数的范围或分布写在声明式文档中，以明确算法与明确种子的生成器为每个环境实例抽样，使整批环境为（文档，种子）的纯函数，训练运行可精确重放，随机化的变更是文档的差异而非程序的差异。变型包括计数器型生成器由（种子，环境序号，参数序号）导出独立流，以及将上述内容的摘要绑定进训练收据。</p>
+<p>上文"变型与推广"一节系<strong>有意穷举列举</strong>，以使针对本机制之显而易见变化的在后申请面对的是明确的书面公开，而非仅仅是"显而易见"的主张。</p>
+<hr />
+<h2 id="statement-of-dedication">Statement of dedication</h2>
+<p>The author does not seek and will not seek patent protection for any
+subject matter disclosed in this document. This document and the
+referenced source code are published to establish the subject matter as
+prior art available to the public as of the publication date stated
+above. The source code remains licensed under the Apache License 2.0,
+whose Section 3 grants an express patent licence from each contributor
+to every recipient.</p>
+<p>Nothing in this document is an admission that any third party holds,
+or does not hold, rights in any subject matter described. Where a
+referenced repository is a clean-room, API-surface-compatible
+implementation of a third-party product, the disclosure is of the
+author's own implementation only.</p>
+
+</div>
+</body>
+</html>

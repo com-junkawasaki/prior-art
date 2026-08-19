@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>One guidance-navigation-control step function parameterized by vehicle physics across media</title>
+<meta name="description" content="Ground, marine, and aerial autonomy are built as separate stacks. The guidance and decision logic is duplicated three times and diverges, although the difference between the vehicles is confined to the physics of how a command becomes motion. A single guidance, navigation and control step function —">
+<meta name="author" content="Jun Kawasaki">
+<link rel="canonical" href="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-09-vehicle-parameterized-gnc.html">
+<link rel="stylesheet" href="../style.css">
+<meta name="keywords" content="guidance navigation control; multi-domain autonomy; bicycle model; fixed wing; multirotor; marine vehicle; heterogeneous fleet; vehicle model as data">
+<meta name="DC.title" content="One guidance-navigation-control step function parameterized by vehicle physics across media">
+<meta name="DC.creator" content="Jun Kawasaki">
+<meta name="DC.date" content="2026-08-19">
+<meta name="DC.type" content="Text">
+<meta name="DC.rights" content="CC0 1.0 Universal">
+<meta name="citation_title" content="One guidance-navigation-control step function parameterized by vehicle physics across media">
+<meta name="citation_author" content="Kawasaki, Jun">
+<meta name="citation_publication_date" content="2026/08/19">
+<meta name="citation_technical_report_institution" content="Defensive publication DP-2026-001">
+<meta name="citation_abstract_html_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-09-vehicle-parameterized-gnc.html">
+<meta name="citation_pdf_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/pdf/DP-2026-001-09-vehicle-parameterized-gnc.pdf">
+</head>
+<body>
+<div class="wrap">
+<nav class="rec"><p><a href="../">← DP-2026-001 index</a> · <a href="pdf/DP-2026-001-09-vehicle-parameterized-gnc.pdf">PDF</a> · record 9 of 10</p></nav>
+<hr>
+<h1
+id="one-guidance-navigation-control-step-function-parameterized-by-vehicle-physics-across-media">One
+guidance-navigation-control step function parameterized by vehicle
+physics across media</h1>
+<blockquote>
+<p><strong>Defensive publication.</strong> This document is published
+solely to place its subject matter into the public domain of technical
+knowledge as prior art. <strong>No patent protection is sought by the
+author for any subject matter described here.</strong></p>
+<p><strong>Author / declarant:</strong> Jun Kawasaki
+(<code>root@junkawasaki.com</code>) <strong>Disclosure set:</strong>
+DP-2026-001, part 9 of 10 · first published 2026-08-19 (UTC)
+<strong>Enabling reference implementation:</strong> public source code
+under <code>https://github.com/kotoba-lang/</code>, licensed Apache-2.0,
+fixed by commit and tree SHA-1 in the evidence bundle at
+<code>https://github.com/com-junkawasaki/prior-art</code> — that bundle
+carries RFC 3161 time-stamp tokens and OpenTimestamps attestations over
+the fixing manifest.</p>
+</blockquote>
+<h2 id="note-on-the-variants-and-generalizations-section-below">Note on
+the "Variants and generalizations" section below</h2>
+<p>The variants are stated deliberately and at length. They are
+disclosed so that a later filing directed to an obvious variation of the
+mechanism is met by an express <strong>written</strong> disclosure of
+that variation, and not merely by an argument that the variation would
+have been obvious. Where the text says "any", the word is intended in
+its ordinary broad sense and the enumeration following it is
+illustrative, not exhaustive.</p>
+<p>Working source code implementing the mechanism is publicly available
+at the commits fixed in the evidence bundle. A person of ordinary skill
+in robotics software can read, build and run that code; this document is
+therefore an enabling disclosure and not a mere statement of a
+result.</p>
+<hr />
+<h3 id="problem">Problem</h3>
+<p>Ground, marine, and aerial autonomy are built as separate stacks. The
+guidance and decision logic is duplicated three times and diverges,
+although the difference between the vehicles is confined to the physics
+of how a command becomes motion.</p>
+<h3 id="mechanism">Mechanism</h3>
+<p>A <strong>single</strong> guidance, navigation and control step
+function — goal handling, path planning, path tracking, clearance
+checking, stuck detection, arrival detection, and telemetry —
+parameterized by a <strong>vehicle model value</strong> supplying only
+the medium-specific relations:</p>
+<ul>
+<li>a ground model (bicycle kinematics with steering and
+wheelbase);</li>
+<li>a marine model (hull hydrodynamic resistance and thrust);</li>
+<li>a fixed-wing model (stall speed, bank-limited turn radius,
+air-density lapse with altitude);</li>
+<li>a multirotor model (thrust-to-weight, tilt-limited
+acceleration).</li>
+</ul>
+<p>The step function is the same code in every case; the vehicle model
+is data. A fleet may therefore be heterogeneous and still be commanded,
+verified, and audited by one implementation, and a new vehicle class is
+added by supplying a model rather than by writing a stack.</p>
+<p>The same function supports fleet-level operation: multiple agents
+each with pose and goal over a shared static scene, with an "ahead and
+closing" predicate used for mutual yielding, a minimum-separation query
+over the fleet, and an all-arrived predicate.</p>
+<h3 id="variants-and-generalizations">Variants and generalizations</h3>
+<ul>
+<li>Vehicle classes may further include: differential-drive;
+omnidirectional and mecanum; tracked; Ackermann with trailer;
+articulated and multi-body machines; legged; underwater vehicles with
+buoyancy and added mass; airships; spacecraft with reaction control;
+hybrid amphibious vehicles.</li>
+<li>The parameterization may be: a record of coefficients; a function
+value; a table; an identified model fitted from logged data; a learned
+dynamics model; a differentiable model.</li>
+<li>The shared logic may extend to: mission sequencing; energy-aware
+routing; contingency and return-to-home; formation keeping; traffic
+rules and right-of-way; collision-avoidance protocol; degraded-mode
+behaviour.</li>
+<li>Heterogeneous fleets may be coordinated by: pairwise yielding
+predicates; priority ordering; auction or market assignment; centralized
+scheduling; the precomputed verified choreography of Section 3.</li>
+<li>The arrangement applies to simulation and to real vehicles with the
+same code, and, with Section 6, to a governor predicting a proposed
+motion's consequence before admitting it.</li>
+</ul>
+<h3 id="reference-implementation">Reference implementation</h3>
+<p><code>kotoba-lang/kami-autodrive</code> (<code>bicycle-model</code>,
+<code>ship-hydro</code>, <code>stall-speed</code>,
+<code>fixed-wing</code>, <code>multirotor</code>,
+<code>isa-density</code>, <code>limits</code>, <code>step</code>,
+<code>step-multimodal</code>, <code>fleet-agent</code>,
+<code>new-fleet</code>, <code>ahead-and-closing?</code>,
+<code>min-separation</code>, <code>all-arrived?</code>,
+<code>autopilot-config</code>, <code>new-autopilot</code>,
+<code>set-goal</code>, <code>telemetry</code>).</p>
+<hr />
+<hr />
+<h2 id="中文摘要--chinese-abstract">中文摘要 / Chinese abstract</h2>
+<p>本文件为<strong>防御性公开</strong>（defensive
+publication）。作者自愿公开以下技术方案，使其成为<strong>现有技术</strong>（专利法第二十二条所称"为公众所知的技术"），并声明<strong>不为其中任何技术方案申请专利</strong>。参考实现的源代码自
+2026 年 8 月 19 日起在互联网上公开获取，采用 Apache-2.0
+许可，仓库地址与提交哈希见
+<code>https://github.com/com-junkawasaki/prior-art</code>。</p>
+<p><strong>一个制导-导航-控制步进函数由载具物理参数化，跨越介质</strong>：目标处理、规划、跟踪、净空检查、卡滞检测、到达判定与遥测为同一份代码，仅以载具模型（地面自行车模型、船舶水动力、固定翼失速与坡度限转弯、多旋翼推重比与倾角限加速度）作为数据。因此异构机群可由一份实现指挥、验证与审计，新增载具类别只需提供模型。</p>
+<p>上文"变型与推广"一节系<strong>有意穷举列举</strong>，以使针对本机制之显而易见变化的在后申请面对的是明确的书面公开，而非仅仅是"显而易见"的主张。</p>
+<hr />
+<h2 id="statement-of-dedication">Statement of dedication</h2>
+<p>The author does not seek and will not seek patent protection for any
+subject matter disclosed in this document. This document and the
+referenced source code are published to establish the subject matter as
+prior art available to the public as of the publication date stated
+above. The source code remains licensed under the Apache License 2.0,
+whose Section 3 grants an express patent licence from each contributor
+to every recipient.</p>
+<p>Nothing in this document is an admission that any third party holds,
+or does not hold, rights in any subject matter described. Where a
+referenced repository is a clean-room, API-surface-compatible
+implementation of a third-party product, the disclosure is of the
+author's own implementation only.</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>One occupancy representation fused from heterogeneous range sources through a single ingest interface</title>
+<meta name="description" content="A mobile robot typically maintains one obstacle representation per sensor modality, fused late and inconsistently, so that the planner&#x27;s notion of free space differs from any single sensor&#x27;s. A single occupancy grid in a stated frame, with one ingest operation per source modality but a single common">
+<meta name="author" content="Jun Kawasaki">
+<link rel="canonical" href="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-08-unified-occupancy-fusion.html">
+<link rel="stylesheet" href="../style.css">
+<meta name="keywords" content="occupancy grid; sensor fusion; lidar; depth camera; A-star path planning; pure pursuit; inflation; stuck detection; mobile robot navigation">
+<meta name="DC.title" content="One occupancy representation fused from heterogeneous range sources through a single ingest interface">
+<meta name="DC.creator" content="Jun Kawasaki">
+<meta name="DC.date" content="2026-08-19">
+<meta name="DC.type" content="Text">
+<meta name="DC.rights" content="CC0 1.0 Universal">
+<meta name="citation_title" content="One occupancy representation fused from heterogeneous range sources through a single ingest interface">
+<meta name="citation_author" content="Kawasaki, Jun">
+<meta name="citation_publication_date" content="2026/08/19">
+<meta name="citation_technical_report_institution" content="Defensive publication DP-2026-001">
+<meta name="citation_abstract_html_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-08-unified-occupancy-fusion.html">
+<meta name="citation_pdf_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/pdf/DP-2026-001-08-unified-occupancy-fusion.pdf">
+</head>
+<body>
+<div class="wrap">
+<nav class="rec"><p><a href="../">← DP-2026-001 index</a> · <a href="pdf/DP-2026-001-08-unified-occupancy-fusion.pdf">PDF</a> · record 8 of 10</p></nav>
+<hr>
+<h1
+id="one-occupancy-representation-fused-from-heterogeneous-range-sources-through-a-single-ingest-interface">One
+occupancy representation fused from heterogeneous range sources through
+a single ingest interface</h1>
+<blockquote>
+<p><strong>Defensive publication.</strong> This document is published
+solely to place its subject matter into the public domain of technical
+knowledge as prior art. <strong>No patent protection is sought by the
+author for any subject matter described here.</strong></p>
+<p><strong>Author / declarant:</strong> Jun Kawasaki
+(<code>root@junkawasaki.com</code>) <strong>Disclosure set:</strong>
+DP-2026-001, part 8 of 10 · first published 2026-08-19 (UTC)
+<strong>Enabling reference implementation:</strong> public source code
+under <code>https://github.com/kotoba-lang/</code>, licensed Apache-2.0,
+fixed by commit and tree SHA-1 in the evidence bundle at
+<code>https://github.com/com-junkawasaki/prior-art</code> — that bundle
+carries RFC 3161 time-stamp tokens and OpenTimestamps attestations over
+the fixing manifest.</p>
+</blockquote>
+<h2 id="note-on-the-variants-and-generalizations-section-below">Note on
+the "Variants and generalizations" section below</h2>
+<p>The variants are stated deliberately and at length. They are
+disclosed so that a later filing directed to an obvious variation of the
+mechanism is met by an express <strong>written</strong> disclosure of
+that variation, and not merely by an argument that the variation would
+have been obvious. Where the text says "any", the word is intended in
+its ordinary broad sense and the enumeration following it is
+illustrative, not exhaustive.</p>
+<p>Working source code implementing the mechanism is publicly available
+at the commits fixed in the evidence bundle. A person of ordinary skill
+in robotics software can read, build and run that code; this document is
+therefore an enabling disclosure and not a mere statement of a
+result.</p>
+<hr />
+<h3 id="problem">Problem</h3>
+<p>A mobile robot typically maintains one obstacle representation per
+sensor modality, fused late and inconsistently, so that the planner's
+notion of free space differs from any single sensor's.</p>
+<h3 id="mechanism">Mechanism</h3>
+<p>A single <strong>occupancy grid</strong> in a stated frame, with
+<strong>one ingest operation per source modality but a single common
+representation</strong>: a rotating-lidar ring sweep and a depth image
+from a camera with stated intrinsics and extrinsics both reduce to
+marked world points in the same grid. The grid then supports, uniformly
+and independently of which sensor produced the evidence:</p>
+<ul>
+<li><strong>inflation</strong> by the robot's footprint radius, so the
+planner may treat the robot as a point;</li>
+<li>conversion to a <strong>cost grid</strong>;</li>
+<li><strong>line-of-sight clearance</strong> tests between cells;</li>
+<li><strong>nearest free cell</strong> search, for recovering from a
+goal or start inside an obstacle;</li>
+<li><strong>forward clearance</strong> queries, answered separately from
+the lidar-derived and camera-derived evidence so that a disagreement
+between modalities is visible rather than averaged away.</li>
+</ul>
+<p>Planning consumes only the grid: an A* search with an admissible
+heuristic, followed by path <strong>simplification</strong> (removing
+intermediate points whose removal leaves the path collision-free) and
+<strong>smoothing</strong>. Tracking consumes only the resulting path: a
+<strong>pure-pursuit</strong> steering law with a lookahead, plus a
+curvature-limited speed law derived from the discrete (Menger) curvature
+of the path, and a cross-track-error term.</p>
+<p>A <strong>stuck detector</strong> observes that commanded progress is
+not producing measured progress and transitions to a defined recovery —
+an open-side steer or a loiter — rather than continuing to command a
+motion that is not working.</p>
+<h3 id="variants-and-generalizations">Variants and generalizations</h3>
+<ul>
+<li>The occupancy representation may be: a 2-D grid; a 2.5-D elevation
+map; a 3-D voxel grid; an octree; a signed-distance field; a set of
+convex free-space regions; a topological graph; a learned latent map.
+The invariant is that heterogeneous sources reduce to one representation
+before planning.</li>
+<li>Sources may include: rotating and solid-state lidar; stereo,
+structured-light, and time-of-flight depth cameras; monocular depth
+estimation; radar; sonar; ultrasonic rings; bumpers and tactile skins;
+wheel-slip detection; prior maps; other robots' shared observations;
+human-supplied annotations.</li>
+<li>Fusion may be: binary marking; log-odds occupancy with per-sensor
+inverse models; Bayesian update; Dempster-Shafer; per-modality layers
+preserved with an explicit combination rule (maximum-conservative,
+weighted, or learned); temporal decay for dynamic obstacles.</li>
+<li>Planning may be: A*; Dijkstra; weighted, any-angle, or lazy
+variants; D* and incremental replanning; RRT and RRT*; probabilistic
+roadmaps; potential fields; lattice search with motion primitives;
+trajectory optimization; a learned planner. Post-processing may be:
+shortcutting; corner smoothing; spline fitting; optimization subject to
+clearance.</li>
+<li>Tracking may be: pure pursuit; Stanley; model-predictive control;
+feedback linearization; a learned controller. Speed limiting may be by:
+path curvature; clearance; visibility distance; braking distance to the
+nearest obstacle; measured traction; comfort limits.</li>
+<li>Recovery may be: rotate-in-place; back-up-and-retry; open-side
+steer; loiter or hold; request human assistance; replan with inflated
+cost; mark the cell as untraversable and replan.</li>
+<li>Disagreement between modalities may be: reported; resolved
+conservatively (the most pessimistic clearance wins); used to trigger a
+slow-down; used to trigger a sensor-fault diagnosis.</li>
+</ul>
+<h3 id="reference-implementation">Reference implementation</h3>
+<p><code>kotoba-lang/kami-autodrive</code> (<code>ingest-lidar</code>,
+<code>ingest-camera-depth</code>, <code>inflated</code>,
+<code>to-cost-grid</code>, <code>line-clear?</code>,
+<code>nearest-free</code>, <code>forward-clearance</code>,
+<code>forward-clearance-camera</code>, <code>astar-grid</code>,
+<code>simplify</code>, <code>smooth</code>, <code>plan</code>,
+<code>pure-pursuit</code>, <code>steer</code>,
+<code>menger-curvature</code>, <code>curvature-speed-limit</code>,
+<code>cross-track-error</code>, <code>register-stuck</code>,
+<code>open-side-steer</code>, <code>loiter-step</code>),
+<code>kotoba-lang/kami-sensor-sim</code> (<code>lidar-new</code>,
+<code>lidar-intrinsics-vlp16</code>, <code>ring-sweep</code>,
+<code>camera-intrinsics-from-hfov</code>,
+<code>render-points-to-depth-image</code>, <code>imu-new</code>,
+<code>contact-sensor-new</code>),
+<code>kotoba-lang/kami-autodrive-scene</code>.</p>
+<hr />
+<hr />
+<h2 id="中文摘要--chinese-abstract">中文摘要 / Chinese abstract</h2>
+<p>本文件为<strong>防御性公开</strong>（defensive
+publication）。作者自愿公开以下技术方案，使其成为<strong>现有技术</strong>（专利法第二十二条所称"为公众所知的技术"），并声明<strong>不为其中任何技术方案申请专利</strong>。参考实现的源代码自
+2026 年 8 月 19 日起在互联网上公开获取，采用 Apache-2.0
+许可，仓库地址与提交哈希见
+<code>https://github.com/com-junkawasaki/prior-art</code>。</p>
+<p><strong>异构测距源经单一接入接口融合为同一占据表示</strong>：旋转激光雷达环扫与带内参外参的深度图像都归约为同一栅格中的世界点；栅格统一支持按足迹半径膨胀、代价图转换、视线通畅性、最近自由格搜索，以及<strong>分别</strong>由雷达证据与相机证据回答的前向净空查询，使模态间的分歧可见而非被平均掉。规划仅消费栅格（A*
+加路径简化与平滑），跟踪仅消费路径（纯追踪加基于 Menger
+曲率的限速与横向误差项）；<strong>卡滞检测器</strong>在指令未产生实测进展时转入既定恢复行为。</p>
+<p>上文"变型与推广"一节系<strong>有意穷举列举</strong>，以使针对本机制之显而易见变化的在后申请面对的是明确的书面公开，而非仅仅是"显而易见"的主张。</p>
+<hr />
+<h2 id="statement-of-dedication">Statement of dedication</h2>
+<p>The author does not seek and will not seek patent protection for any
+subject matter disclosed in this document. This document and the
+referenced source code are published to establish the subject matter as
+prior art available to the public as of the publication date stated
+above. The source code remains licensed under the Apache License 2.0,
+whose Section 3 grants an express patent licence from each contributor
+to every recipient.</p>
+<p>Nothing in this document is an admission that any third party holds,
+or does not hold, rights in any subject matter described. Where a
+referenced repository is a clean-room, API-surface-compatible
+implementation of a third-party product, the disclosure is of the
+author's own implementation only.</p>
+
+</div>
+</body>
+</html>

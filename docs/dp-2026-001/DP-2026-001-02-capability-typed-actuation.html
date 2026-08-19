@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Actuation as a typed capability, such that an ungranted actuation cannot be expressed</title>
+<meta name="description" content="Section 1 places a check between the actor and the hardware. That check can be bypassed if the actor&#x27;s language gives it *ambient authority* — the ability to reach a device, socket, file, or driver directly, without asking. Every practical safety mechanism built on filtering an output stream can be ">
+<meta name="author" content="Jun Kawasaki">
+<link rel="canonical" href="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-02-capability-typed-actuation.html">
+<link rel="stylesheet" href="../style.css">
+<meta name="keywords" content="capability security; object capability; effect system; deny by default; sandboxing; WebAssembly; ambient authority; robot actuation; least privilege; fail closed">
+<meta name="DC.title" content="Actuation as a typed capability, such that an ungranted actuation cannot be expressed">
+<meta name="DC.creator" content="Jun Kawasaki">
+<meta name="DC.date" content="2026-08-19">
+<meta name="DC.type" content="Text">
+<meta name="DC.rights" content="CC0 1.0 Universal">
+<meta name="citation_title" content="Actuation as a typed capability, such that an ungranted actuation cannot be expressed">
+<meta name="citation_author" content="Kawasaki, Jun">
+<meta name="citation_publication_date" content="2026/08/19">
+<meta name="citation_technical_report_institution" content="Defensive publication DP-2026-001">
+<meta name="citation_abstract_html_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/DP-2026-001-02-capability-typed-actuation.html">
+<meta name="citation_pdf_url" content="https://com-junkawasaki.github.io/prior-art/dp-2026-001/pdf/DP-2026-001-02-capability-typed-actuation.pdf">
+</head>
+<body>
+<div class="wrap">
+<nav class="rec"><p><a href="../">← DP-2026-001 index</a> · <a href="pdf/DP-2026-001-02-capability-typed-actuation.pdf">PDF</a> · record 2 of 10</p></nav>
+<hr>
+<h1
+id="actuation-as-a-typed-capability-such-that-an-ungranted-actuation-cannot-be-expressed">Actuation
+as a typed capability, such that an ungranted actuation cannot be
+expressed</h1>
+<blockquote>
+<p><strong>Defensive publication.</strong> This document is published
+solely to place its subject matter into the public domain of technical
+knowledge as prior art. <strong>No patent protection is sought by the
+author for any subject matter described here.</strong></p>
+<p><strong>Author / declarant:</strong> Jun Kawasaki
+(<code>root@junkawasaki.com</code>) <strong>Disclosure set:</strong>
+DP-2026-001, part 2 of 10 · first published 2026-08-19 (UTC)
+<strong>Enabling reference implementation:</strong> public source code
+under <code>https://github.com/kotoba-lang/</code>, licensed Apache-2.0,
+fixed by commit and tree SHA-1 in the evidence bundle at
+<code>https://github.com/com-junkawasaki/prior-art</code> — that bundle
+carries RFC 3161 time-stamp tokens and OpenTimestamps attestations over
+the fixing manifest.</p>
+</blockquote>
+<h2 id="note-on-the-variants-and-generalizations-section-below">Note on
+the "Variants and generalizations" section below</h2>
+<p>The variants are stated deliberately and at length. They are
+disclosed so that a later filing directed to an obvious variation of the
+mechanism is met by an express <strong>written</strong> disclosure of
+that variation, and not merely by an argument that the variation would
+have been obvious. Where the text says "any", the word is intended in
+its ordinary broad sense and the enumeration following it is
+illustrative, not exhaustive.</p>
+<p>Working source code implementing the mechanism is publicly available
+at the commits fixed in the evidence bundle. A person of ordinary skill
+in robotics software can read, build and run that code; this document is
+therefore an enabling disclosure and not a mere statement of a
+result.</p>
+<hr />
+<h3 id="problem">Problem</h3>
+<p>Section 1 places a check between the actor and the hardware. That
+check can be bypassed if the actor's language gives it <em>ambient
+authority</em> — the ability to reach a device, socket, file, or driver
+directly, without asking. Every practical safety mechanism built on
+filtering an output stream can be defeated by a component that writes to
+the device by another route.</p>
+<h3 id="mechanism">Mechanism</h3>
+<p>The actor's program is written in a language, or a restricted subset
+of a language, in which the ability to cause an externally observable
+effect <strong>is a value that must be received</strong>, not an
+operation that is always available.</p>
+<p>Specifically:</p>
+<ul>
+<li>The program declares the set of effects it may perform. The
+declaration is part of the compiled artifact.</li>
+<li>The compiler <strong>infers</strong> the effect set from the program
+body and <strong>refuses to compile</strong> if the program performs an
+effect it did not declare, and equally if it declares an effect it does
+not perform.</li>
+<li>At load time the host supplies a set of <strong>grants</strong>. If
+the grants do not match the artifact's required effect set exactly,
+<strong>instantiation fails</strong> — the program never begins
+executing, rather than failing at the moment it first attempts the
+effect.</li>
+<li>The program has no general-purpose escape: no arbitrary module
+loading, no <code>eval</code>, no reflection, no foreign-function
+interface, no ambient global mutable state, no direct access to devices,
+sockets, filesystems, or credentials. There is exactly one way for an
+effect to occur, and it is through a granted capability.</li>
+<li>Each effect is additionally bounded by quantitative limits enforced
+by the host: an execution-step or "fuel" budget, a memory ceiling, a
+queue depth, a message-size ceiling. Exhaustion is a defined, reported
+outcome, not undefined behaviour.</li>
+<li>Errors are returned as values (a result type carrying either the
+success value or a typed error), not thrown, so that no control-flow
+path silently skips a check.</li>
+<li>Policy is <strong>deny-by-default</strong>: absence of a grant is
+refusal, never permission.</li>
+<li>Capabilities are <strong>attenuable on delegation</strong>: a
+component may pass on a strictly narrower capability (narrower resource,
+shorter deadline, smaller budget) but never a broader one.</li>
+</ul>
+<p>Applied to robotics, the effects are precisely the actuation and
+sensing surfaces: set joint effort, publish a velocity command, energize
+a tool, read a sensor. A policy that was granted "read the lidar" and
+"publish a velocity command bounded to 0.4 m/s" <strong>cannot
+express</strong> energizing a gripper, because the operation is not
+merely forbidden — it is not reachable from the program text.</p>
+<p>The capability is identified by a <strong>name in a scoped semantic
+model</strong> (kind, resource, holder) rather than by a numeric wire
+index; numeric indices, if any, are an internal transport detail of the
+host and do not appear in the program's source.</p>
+<h3 id="variants-and-generalizations">Variants and generalizations</h3>
+<ul>
+<li>The restricted language may be: a purpose-designed language; a
+subset of an existing language enforced by a verifier; a bytecode with a
+typed import table; WebAssembly with an explicitly declared import set;
+a sandboxed interpreter; a proof-carrying binary.</li>
+<li>The effect set may be: declared and checked; wholly inferred;
+inferred with declaration required only at public API and package
+boundaries; declared as a maximum ceiling with the inferred set required
+to be a subset.</li>
+<li>The grant may be: a plain token; a signed certificate; an object
+capability reference; a UCAN, CACAO, macaroon, biscuit, or comparable
+attenuable credential; a hardware-backed key; a lease with an expiry; a
+quorum-issued certificate. The binding of grant to artifact may be by
+exact set equality, by subset, or by a stated compatibility relation,
+provided that absence of a grant is refusal.</li>
+<li>The failure-closed point may be: compile time; link time;
+instantiation time; first use. Instantiation-time refusal is preferred
+because it removes the partially executed state, but each is a
+variant.</li>
+<li>Quantitative bounds may be: instruction counts; wall-clock
+deadlines; energy budgets; actuation-magnitude ceilings (velocity,
+force, torque, jerk, temperature); count of actuations; distance
+travelled; volume of workspace swept.</li>
+<li>The same arrangement covers non-robotic effects: network access,
+filesystem access, payment, message publication, model inference, code
+deployment.</li>
+<li>The host may be: a server process; a browser; an embedded runtime; a
+real-time executive; a microkernel; bare metal. The mechanism does not
+depend on an operating system being present.</li>
+<li>The capability namespace may be: flat names; hierarchical paths;
+URIs; content-addressed identifiers of the capability's own semantic
+definition.</li>
+</ul>
+<h3 id="reference-implementation">Reference implementation</h3>
+<p><code>kotoba-lang/kotoba-lang</code>
+(<code>lang/capability-semantics.edn</code>,
+<code>lang/surface-status.edn</code>), <code>kotoba-lang/amu</code>
+(capability kits, effect inference, admission),
+<code>kotoba-lang/kototama</code> (host linking),
+<code>kotoba-lang/capability-*</code> (the individual capability
+contracts, including <code>capability-kami-engine</code>,
+<code>capability-motion-read</code>,
+<code>capability-topic-publish</code>,
+<code>capability-topic-subscribe</code>,
+<code>capability-irq-subscribe</code>, <code>capability-mmio-map</code>,
+<code>capability-dma-map</code>).</p>
+<hr />
+<hr />
+<h2 id="中文摘要--chinese-abstract">中文摘要 / Chinese abstract</h2>
+<p>本文件为<strong>防御性公开</strong>（defensive
+publication）。作者自愿公开以下技术方案，使其成为<strong>现有技术</strong>（专利法第二十二条所称"为公众所知的技术"），并声明<strong>不为其中任何技术方案申请专利</strong>。参考实现的源代码自
+2026 年 8 月 19 日起在互联网上公开获取，采用 Apache-2.0
+许可，仓库地址与提交哈希见
+<code>https://github.com/com-junkawasaki/prior-art</code>。</p>
+<p><strong>将执行机构操作表示为带类型的能力（capability），使未被授予的操作无法被表达</strong>：程序所声明的副作用集合由编译器从程序体<strong>推断</strong>，声明与推断不一致即拒绝编译；装载时若宿主提供的授权与制品所需能力集合不一致，则<strong>实例化失败</strong>，程序根本不会开始执行。语言中不存在任意模块装载、<code>eval</code>、反射、外部函数接口、环境全局可变状态，也不存在对设备、套接字、文件系统或凭据的直接访问；错误以值（result
+类型）返回而非抛出；策略为<strong>默认拒绝</strong>；宿主强制执行燃料（步数）、内存、队列深度与消息大小上限。因此一个仅被授予"读取激光雷达"和"以不超过
+0.4 m/s
+发布速度指令"的策略，<strong>无法表达</strong>给夹持器通电这一操作。</p>
+<p>上文"变型与推广"一节系<strong>有意穷举列举</strong>，以使针对本机制之显而易见变化的在后申请面对的是明确的书面公开，而非仅仅是"显而易见"的主张。</p>
+<hr />
+<h2 id="statement-of-dedication">Statement of dedication</h2>
+<p>The author does not seek and will not seek patent protection for any
+subject matter disclosed in this document. This document and the
+referenced source code are published to establish the subject matter as
+prior art available to the public as of the publication date stated
+above. The source code remains licensed under the Apache License 2.0,
+whose Section 3 grants an express patent licence from each contributor
+to every recipient.</p>
+<p>Nothing in this document is an admission that any third party holds,
+or does not hold, rights in any subject matter described. Where a
+referenced repository is a clean-room, API-surface-compatible
+implementation of a third-party product, the disclosure is of the
+author's own implementation only.</p>
+
+</div>
+</body>
+</html>
