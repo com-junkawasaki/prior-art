@@ -1,0 +1,43 @@
+{
+ "recorded_utc": "2026-08-19T10:02:48Z",
+ "note": "Final status. software-heritage-save-requests.json is NOT updated in place because it is covered by SHA256SUMS, which carries an RFC 3161 token and a Bitcoin anchor -- editing it would make the anchored evidence inconsistent. This file records current truth alongside it.",
+ "accepted": [
+  "com-abb-robotics",
+  "com-bluefin-robotics",
+  "com-cobot-assembly",
+  "com-liquid-robotics",
+  "com-modbus-tcp",
+  "com-nvidia-isaac",
+  "com-nvidia-isaac-lab",
+  "com-nvidia-isaac-sim",
+  "com-ros-robotics",
+  "com-ros2-nav",
+  "com-semicon-robotics",
+  "com-sony-dualsense",
+  "com-universal-robots",
+  "giemon",
+  "governor",
+  "kami-app-giemon",
+  "kami-app-giemon-factory",
+  "kami-articulated",
+  "kami-autodrive",
+  "kami-autodrive-scene",
+  "kami-sensor-sim",
+  "org-farama-gymnasium",
+  "org-ros",
+  "org-ros-urdf",
+  "physics",
+  "physics-2d",
+  "robotics",
+  "swarm-choreo",
+  "teleop"
+ ],
+ "accepted_count": 29,
+ "not_yet_requested": [
+  "kami-app-sarutahiko-factory",
+  "kami-app-hygaccess-plant"
+ ],
+ "cause": "anonymous Software Heritage save API throttles to roughly ten origins per hour",
+ "how_to_finish": "POST https://archive.softwareheritage.org/api/1/origin/save/git/url/https://github.com/kotoba-lang/<repo>/ for each remaining repo, or use an authenticated token to raise the limit",
+ "how_to_check_live": "curl -s 'https://archive.softwareheritage.org/api/1/origin/https://github.com/kotoba-lang/<repo>/visits/'"
+}
